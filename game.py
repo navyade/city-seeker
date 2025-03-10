@@ -211,12 +211,6 @@ def next_question():
     else:
         country_pool = hard_countries
 
-    if len(asked_questions) == len(country_pool):
-        messagebox.showinfo("Game Over", f"Final Score: {score}")
-        update_leaderboard()
-        ask_to_restart_or_end()
-        return
-
     # 3) Pick a question that hasn't been asked
     country, capital = random.choice(list(country_pool.items()))
     while country in asked_questions:
@@ -251,11 +245,8 @@ def select_answer(index):
 def show_custom_popup(is_correct, correct_answer=None):
     popup = tk.Toplevel()
     popup.title("Result")
-    
-    # Decide the size you want:
     popup.geometry("400x200")  # width x height in pixels
     
-    # Make the popup appear on top of the main window
     popup.transient(root)
     popup.grab_set()
 
@@ -271,16 +262,18 @@ def show_custom_popup(is_correct, correct_answer=None):
     icon_label.pack(pady=10)
     text_label.pack(pady=10)
 
-    # Button to close the popup
     ok_button = tk.Button(
         popup,
         text="OK",
-        fg="black",         # text color
-        bg="white",          # background color
-        font=("Arial", 14), # larger font
+        fg="black",
+        bg="white",
+        font=("Arial", 14),
         command=popup.destroy
     )
     ok_button.pack(pady=10, ipadx=10, ipady=5)
+
+    # IMPORTANT: return the popup so we can wait on it
+    return popup
 
 def confirm_answer():
     global score
@@ -288,15 +281,32 @@ def confirm_answer():
         messagebox.showwarning("Warning", "Please select an answer!")
         return
 
+    # Check if user's answer is correct
     if options[selected_answer_index] == correct_answer:
         score += 10
-        # Show the tick popup
-        show_custom_popup(is_correct=True)
+        popup = show_custom_popup(is_correct=True)
     else:
-        # Show the cross popup
-        show_custom_popup(is_correct=False, correct_answer=correct_answer)
+        popup = show_custom_popup(is_correct=False, correct_answer=correct_answer)
 
-    next_question()
+    # 1) Wait until the user closes the popup
+    popup.wait_window()
+
+    # 2) Check if all questions have been asked
+    if difficulty == "Easy":
+        country_pool = easy_countries
+    elif difficulty == "Medium":
+        country_pool = medium_countries
+    else:
+        country_pool = hard_countries
+
+    if len(asked_questions) == len(country_pool):
+        # 3) Show final score AFTER user closed the correct/incorrect popup
+        messagebox.showinfo("Game Over", f"Final Score: {score}")
+        update_leaderboard()
+        ask_to_restart_or_end()
+    else:
+        # Otherwise, move to the next question
+        next_question()
 
 # --------------------- Lifelines and Endgame ----------------------
 def use_lifeline(lifeline_type):
