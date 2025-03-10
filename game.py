@@ -248,6 +248,40 @@ def select_answer(index):
         else:
             btn.configure(style="Visible.TButton")
 
+def show_custom_popup(is_correct, correct_answer=None):
+    popup = tk.Toplevel()
+    popup.title("Result")
+    
+    # Decide the size you want:
+    popup.geometry("400x200")  # width x height in pixels
+    
+    # Make the popup appear on top of the main window
+    popup.transient(root)
+    popup.grab_set()
+
+    # Decide which image and text to show
+    if is_correct:
+        icon_label = tk.Label(popup, image=tick_image)
+        text_label = tk.Label(popup, text="You got it right!", font=("Arial", 14))
+    else:
+        icon_label = tk.Label(popup, image=cross_image)
+        text_label = tk.Label(popup, text=f"Incorrect! Correct answer was: {correct_answer}",
+                              font=("Arial", 14))
+
+    icon_label.pack(pady=10)
+    text_label.pack(pady=10)
+
+    # Button to close the popup
+    ok_button = tk.Button(
+        popup,
+        text="OK",
+        fg="black",         # text color
+        bg="white",          # background color
+        font=("Arial", 14), # larger font
+        command=popup.destroy
+    )
+    ok_button.pack(pady=10, ipadx=10, ipady=5)
+
 def confirm_answer():
     global score
     if selected_answer_index is None:
@@ -256,9 +290,11 @@ def confirm_answer():
 
     if options[selected_answer_index] == correct_answer:
         score += 10
-        messagebox.showinfo("Correct!", "You got it right!")
+        # Show the tick popup
+        show_custom_popup(is_correct=True)
     else:
-        messagebox.showinfo("Incorrect", f"The correct answer was: {correct_answer}")
+        # Show the cross popup
+        show_custom_popup(is_correct=False, correct_answer=correct_answer)
 
     next_question()
 
@@ -356,6 +392,10 @@ root = tk.Tk()
 root.title("City Seeker Quiz")
 root.geometry("500x600")
 root.resizable(False, False)
+
+# Load your images
+tick_image = tk.PhotoImage(file="tick.png")
+cross_image = tk.PhotoImage(file="cross.png")
 
 # 1) Create a style for your frames, labels, buttons, etc.
 style = ttk.Style()
